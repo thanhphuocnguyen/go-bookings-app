@@ -2,6 +2,7 @@ package render
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 	"path/filepath"
 
@@ -48,6 +49,7 @@ func InitTemplateCache(appConfig *config.AppConfig) (map[string]*template.Templa
 	cache := make(map[string]*template.Template)
 	tmplFiles, err := filepath.Glob("./templates/*.page.tmpl")
 	if err != nil {
+		log.Println("Error getting template files", err)
 		return cache, err
 	}
 	for _, file := range tmplFiles {
@@ -56,18 +58,21 @@ func InitTemplateCache(appConfig *config.AppConfig) (map[string]*template.Templa
 		// template.New(name).Funcs(function) is used to create a new template with the given name and function map
 		ts, err := template.New(name).Funcs(function).ParseFiles(file)
 		if err != nil {
+			log.Println("Error parsing template", err)
 			return cache, err
 		}
 
 		layoutTmpl, err := filepath.Glob("./templates/*.layout.tmpl")
 
 		if err != nil {
+			log.Println("Error getting layout files", err)
 			return cache, err
 		}
 
 		if len(layoutTmpl) > 0 {
 			ts, err = ts.ParseGlob("./templates/*.layout.tmpl")
 			if err != nil {
+				log.Println("Error parsing layout template", err)
 				return cache, err
 			}
 		}

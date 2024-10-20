@@ -28,12 +28,12 @@ func main() {
 	appConfig.Session.Cookie.Secure = appConfig.InProduction
 
 	// Initialize the template cache
-	render.InitializeRender(&appConfig)
 	cache, err := render.InitTemplateCache(&appConfig)
 	if err != nil {
 		log.Fatal("Cannot create template cache")
 	}
 	appConfig.TemplateCache = cache
+	render.InitializeRender(&appConfig)
 
 	// Initialize a new repository
 	repo := handlers.NewRepo(&appConfig)

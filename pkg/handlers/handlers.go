@@ -24,6 +24,6 @@ func NewRepo(a *config.AppConfig) *Repository {
 	}
 }
 
-func (m *Repository) NewTest(w http.ResponseWriter, r *http.Request) {
-	render.RenderTemplate(w, "test.page.tmpl", &models.TemplateData{})
+func (m *Repository) Home(w http.ResponseWriter, r *http.Request) {
+	render.RenderTemplate(w, "home.page.tmpl", &models.TemplateData{})
 }
