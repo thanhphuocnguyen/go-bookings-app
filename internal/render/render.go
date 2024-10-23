@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 
 	"github.com/justinas/nosurf"
-	"github.com/thanhphuocnguyen/go-bookings-app/pkg/config"
-	"github.com/thanhphuocnguyen/go-bookings-app/pkg/models"
+	"github.com/thanhphuocnguyen/go-bookings-app/internal/config"
+	"github.com/thanhphuocnguyen/go-bookings-app/internal/models"
 )
 
 // Function is a map of functions that can be used in the template

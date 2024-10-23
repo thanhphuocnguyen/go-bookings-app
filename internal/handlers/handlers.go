@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"encoding/json"
+	"log"
 	"net/http"
 
-	"github.com/thanhphuocnguyen/go-bookings-app/pkg/config"
-	"github.com/thanhphuocnguyen/go-bookings-app/pkg/models"
-	"github.com/thanhphuocnguyen/go-bookings-app/pkg/render"
+	"github.com/thanhphuocnguyen/go-bookings-app/internal/config"
+	"github.com/thanhphuocnguyen/go-bookings-app/internal/models"
+	"github.com/thanhphuocnguyen/go-bookings-app/internal/render"
 )
 
 type Repository struct {
@@ -53,5 +55,27 @@ func (m *Repository) Availability(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Posted to search availability"))
+	w.Write([]byte("Start date is: " + r.Form.Get("start_date") + " and end date is: " + r.Form.Get("end_date")))
+}
+
+type jsonResponse struct {
+	OK      bool   `json:"ok"`
+	Message string `json:"message"`
+}
+
+func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
+	resp := jsonResponse{
+		true,
+		"Available!",
+	}
+
+	out, err := json.MarshalIndent(resp, "", "  ")
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+	w.Header().Set("Content-Type", "application/json")
+	// set status code to 200
+	w.WriteHeader(http.StatusOK)
+	log.Println(string(out))
+	w.Write(out)
 }
