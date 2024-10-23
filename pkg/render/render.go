@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/justinas/nosurf"
 	"github.com/thanhphuocnguyen/go-bookings-app/pkg/config"
 	"github.com/thanhphuocnguyen/go-bookings-app/pkg/models"
 )
@@ -19,14 +20,15 @@ func InitializeRender(appConfig *config.AppConfig) {
 	app = appConfig
 }
 
-func AddDefaultData(td *models.TemplateData) *models.TemplateData {
+func AddDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateData {
+	td.CSRFToken = nosurf.Token(r)
 	return td
 }
 
-func RenderTemplate(w http.ResponseWriter, tmpl string, data *models.TemplateData) {
+func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data *models.TemplateData) {
 	var t *template.Template
 	var ok bool
-
+	data = AddDefaultData(data, r)
 	if app.UseCache {
 		t, ok = app.TemplateCache[tmpl]
 		if !ok {
