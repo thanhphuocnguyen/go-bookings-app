@@ -1,6 +1,7 @@
 package render
 
 import (
+	"bytes"
 	"html/template"
 	"log"
 	"net/http"
@@ -22,32 +23,36 @@ func InitializeRender(appConfig *config.AppConfig) {
 
 func AddDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateData {
 	td.CSRFToken = nosurf.Token(r)
+	td.Flash = app.Session.PopString(r.Context(), "flash")
+	td.Warning = app.Session.PopString(r.Context(), "warning")
+	td.Error = app.Session.PopString(r.Context(), "error")
 	return td
 }
 
 func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data *models.TemplateData) {
-	var t *template.Template
-	var ok bool
-	data = AddDefaultData(data, r)
+	var templateCache map[string]*template.Template
 	if app.UseCache {
-		t, ok = app.TemplateCache[tmpl]
-		if !ok {
-			panic("Could not get template from cache")
+		templateCache = app.TemplateCache
+	} else {
+		templateCache, _ = InitTemplateCache()
+	}
+	buffer := new(bytes.Buffer)
+	if tmpl, ok := templateCache[tmpl]; ok {
+		data = AddDefaultData(data, r)
+		err := tmpl.Execute(buffer, data)
+		if err != nil {
+			log.Fatalln("Error executing template: ", err)
+		}
+		_, err = buffer.WriteTo(w)
+		if err != nil {
+			log.Fatalln("Error writing template to browser: ", err)
 		}
 	} else {
-		t, ok = app.TemplateCache[tmpl]
-		if !ok {
-			panic("Could not get template from cache")
-		}
-	}
-
-	err := t.Execute(w, data)
-	if err != nil {
-		panic(err)
+		log.Fatalln("Template not found in cache")
 	}
 }
 
-func InitTemplateCache(appConfig *config.AppConfig) (map[string]*template.Template, error) {
+func InitTemplateCache() (map[string]*template.Template, error) {
 	cache := make(map[string]*template.Template)
 	tmplFiles, err := filepath.Glob("./templates/*.page.tmpl")
 	if err != nil {

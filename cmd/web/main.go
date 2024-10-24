@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/config"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/handlers"
+	"github.com/thanhphuocnguyen/go-bookings-app/internal/models"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/render"
 )
 
@@ -17,6 +19,14 @@ const portNumber = ":8083"
 var appConfig config.AppConfig
 
 func main() {
+	gob.Register(models.Reservation{})
+	// Initialize the template cache
+	templateCache, err := render.InitTemplateCache()
+	if err != nil {
+		log.Fatalln("Error parsing templates: ", err)
+	}
+
+	appConfig.TemplateCache = templateCache
 	// This is the entry point of the application
 	appConfig.InProduction = false
 	appConfig.UseCache = false
@@ -27,12 +37,6 @@ func main() {
 	appConfig.Session.Cookie.SameSite = http.SameSiteLaxMode
 	appConfig.Session.Cookie.Secure = appConfig.InProduction
 
-	// Initialize the template cache
-	cache, err := render.InitTemplateCache(&appConfig)
-	if err != nil {
-		log.Fatal("Cannot create template cache")
-	}
-	appConfig.TemplateCache = cache
 	render.InitializeRender(&appConfig)
 
 	// Initialize a new repository
@@ -48,7 +52,5 @@ func main() {
 
 	err = server.ListenAndServe()
 
-	if err != nil {
-		log.Fatal(err)
-	}
+	log.Fatalln("Error starting server: ", err)
 }
