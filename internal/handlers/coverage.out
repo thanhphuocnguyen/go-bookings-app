@@ -1,0 +1,22 @@
+mode: set
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:20.30,22.2 1 1
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:24.47,28.2 1 1
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:30.67,32.2 1 1
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:34.68,36.2 1 1
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:38.70,40.2 1 1
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:42.74,50.2 4 1
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:51.78,53.16 2 1
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:53.16,56.3 2 0
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:58.2,72.16 7 1
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:72.16,80.3 4 0
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:81.2,83.66 2 1
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:86.81,88.9 2 1
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:88.9,93.3 4 1
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:94.2,98.4 3 0
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:101.71,103.2 1 1
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:105.69,107.2 1 1
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:109.75,113.2 1 1
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:115.80,117.2 0 1
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:124.79,131.16 3 1
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:131.16,133.3 1 0
+github.com/thanhphuocnguyen/go-bookings-app/internal/handlers/handlers.go:134.2,138.14 4 1

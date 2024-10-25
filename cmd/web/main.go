@@ -19,11 +19,28 @@ const portNumber = ":8083"
 var appConfig config.AppConfig
 
 func main() {
+	err := run()
+
+	if err != nil {
+		log.Fatalln("Error starting application: ", err)
+	}
+
+	fmt.Printf("Starting application on port %s\n", portNumber)
+	server := &http.Server{
+		Addr:    portNumber,
+		Handler: routes(),
+	}
+	err = server.ListenAndServe()
+	log.Fatalln("Error starting server: ", err)
+}
+
+func run() error {
 	gob.Register(models.Reservation{})
 	// Initialize the template cache
 	templateCache, err := render.InitTemplateCache()
 	if err != nil {
 		log.Fatalln("Error parsing templates: ", err)
+		return err
 	}
 
 	appConfig.TemplateCache = templateCache
@@ -42,15 +59,5 @@ func main() {
 	// Initialize a new repository
 	repo := handlers.NewRepo(&appConfig)
 	handlers.InitRepo(repo)
-
-	fmt.Printf("Starting application on port %s\n", portNumber)
-
-	server := &http.Server{
-		Addr:    portNumber,
-		Handler: routes(),
-	}
-
-	err = server.ListenAndServe()
-
-	log.Fatalln("Error starting server: ", err)
+	return nil
 }
