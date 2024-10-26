@@ -7,6 +7,7 @@ import (
 
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/config"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/forms"
+	"github.com/thanhphuocnguyen/go-bookings-app/internal/helpers"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/models"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/render"
 )
@@ -51,7 +52,7 @@ func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		log.Println(err)
+		helpers.ServerError(w, err)
 		return
 	}
 
@@ -86,7 +87,7 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) {
 	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
 	if !ok {
-		log.Println("Cannot get reservation from session")
+		m.App.ErrorLog.Println("Cannot get reservation from session")
 		m.App.Session.Put(r.Context(), "error", "Cannot get reservation from session")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
@@ -129,7 +130,7 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 
 	out, err := json.MarshalIndent(resp, "", "  ")
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		helpers.ServerError(w, err)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	// set status code to 200

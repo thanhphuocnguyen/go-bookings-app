@@ -10,6 +10,7 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/config"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/handlers"
+	"github.com/thanhphuocnguyen/go-bookings-app/internal/helpers"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/models"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/render"
 )
@@ -48,14 +49,17 @@ func run() error {
 	appConfig.InProduction = false
 	appConfig.UseCache = false
 
+	appConfig.InfoLog = *log.New(log.Writer(), "INFO\t", log.Ldate|log.Ltime)
+	appConfig.ErrorLog = *log.New(log.Writer(), "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
 	appConfig.Session = scs.New()
 	appConfig.Session.Lifetime = 24 * time.Hour
 	appConfig.Session.Cookie.Persist = true
 	appConfig.Session.Cookie.SameSite = http.SameSiteLaxMode
 	appConfig.Session.Cookie.Secure = appConfig.InProduction
 
+	helpers.InitHelper(&appConfig)
 	render.InitializeRender(&appConfig)
-
 	// Initialize a new repository
 	repo := handlers.NewRepo(&appConfig)
 	handlers.InitRepo(repo)

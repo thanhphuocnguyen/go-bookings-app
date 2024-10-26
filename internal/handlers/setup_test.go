@@ -61,6 +61,9 @@ func getRoutes() http.Handler {
 	appConfig.Session.Cookie.SameSite = http.SameSiteLaxMode
 	appConfig.Session.Cookie.Secure = appConfig.InProduction
 
+	appConfig.InfoLog = *log.New(log.Writer(), "INFO\t", log.Ldate|log.Ltime)
+	appConfig.ErrorLog = *log.New(log.Writer(), "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
 	render.InitializeRender(&appConfig)
 
 	// Initialize a new repository
