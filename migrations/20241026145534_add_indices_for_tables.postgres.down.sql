@@ -1,0 +1,7 @@
+DROP INDEX "idx_rooms_room_name"
+DROP INDEX "idx_reservation_user_id"
+DROP INDEX "idx_reservation_room_id"
+DROP INDEX "idx_reservation_start_end_date"
+DROP INDEX "idx_room_restrictions_room_id"
+DROP INDEX "idx_room_restrictions_restriction_id"
+DROP INDEX "idx_restrictions_unique_name"
