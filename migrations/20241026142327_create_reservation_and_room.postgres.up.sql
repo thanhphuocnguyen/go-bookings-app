@@ -1,16 +1,19 @@
 CREATE TABLE
     "rooms" (
-        "id" integer PRIMARY KEY,
-        "room_name" varchar,
+        "id" SERIAL PRIMARY KEY,
+        "name" varchar,
         "created_at" timestamp DEFAULT (now ()),
         "updated_at" timestamp DEFAULT (now ())
     );
 
 CREATE TABLE
-    "reservation" (
-        "id" integer PRIMARY KEY,
+    "reservations" (
+        "id" SERIAL PRIMARY KEY,
         "user_id" integer NOT NULL,
         "phone" varchar NOT NULL,
+        "email" varchar NOT NULL,
+        "first_name" varchar NOT NULL,
+        "last_name" varchar NOT NULL,
         "room_id" integer NOT NULL,
         "start_date" date,
         "end_date" date,

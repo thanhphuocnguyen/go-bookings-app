@@ -4,16 +4,21 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/config"
+	"github.com/thanhphuocnguyen/go-bookings-app/internal/driver"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/forms"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/helpers"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/models"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/render"
+	"github.com/thanhphuocnguyen/go-bookings-app/internal/repository"
+	"github.com/thanhphuocnguyen/go-bookings-app/internal/repository/dbRepo"
 )
 
 type Repository struct {
 	App *config.AppConfig
+	DB  repository.DatabaseRepo
 }
 
 var Repo *Repository
@@ -22,13 +27,15 @@ func InitRepo(r *Repository) {
 	Repo = r
 }
 
-func NewRepo(a *config.AppConfig) *Repository {
+func NewRepo(a *config.AppConfig, db *driver.DB) *Repository {
 	return &Repository{
 		App: a,
+		DB:  dbRepo.InitPGRepository(a, db.SQL),
 	}
 }
 
 func (m *Repository) Home(w http.ResponseWriter, r *http.Request) {
+	m.DB.AllUsers()
 	render.RenderTemplate(w, r, "home.page.tmpl", &models.TemplateData{})
 }
 
@@ -56,11 +63,26 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	startDate, err := time.Parse("2006-01-02", "2021-01-01")
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	endDate, err := time.Parse("2006-01-02", "2021-01-02")
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
 	reservation := models.Reservation{
+		UserId:    1,
+		RoomId:    1,
 		FirstName: r.Form.Get("first_name"),
 		LastName:  r.Form.Get("last_name"),
 		Email:     r.Form.Get("email"),
 		Phone:     r.Form.Get("phone"),
+		StartDate: startDate,
+		EndDate:   endDate,
 	}
 
 	f := forms.New(r.PostForm)
@@ -79,6 +101,22 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	newResId, err := m.DB.InsertReservation(&reservation)
+
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+	roomRestriction := models.RoomRestriction{
+		RoomId:        1,
+		StartDate:     startDate,
+		EndDate:       endDate,
+		RestrictionId: 1,
+		ReservationId: newResId,
+	}
+
+	m.DB.InsertRoomRestriction(&roomRestriction)
 	m.App.Session.Put(r.Context(), "reservation", reservation)
 
 	http.Redirect(w, r, "/reservation-summary", http.StatusSeeOther)

@@ -1,4 +1,4 @@
-DROP INDEX "idx_rooms_room_name"
+DROP INDEX "idx_rooms_name"
 DROP INDEX "idx_reservation_user_id"
 DROP INDEX "idx_reservation_room_id"
 DROP INDEX "idx_reservation_start_end_date"

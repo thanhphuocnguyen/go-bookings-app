@@ -1,2 +1,2 @@
-ALTER TABLE "rooms" ALTER COLUMN "room_name" SET NOT NULL;
-ALTER TABLE "rooms" ADD CONSTRAINT "unique_room_name" UNIQUE ("room_name");
+ALTER TABLE "rooms" ALTER COLUMN "name" SET NOT NULL;
+ALTER TABLE "rooms" ADD CONSTRAINT "unique_name" UNIQUE ("name");
