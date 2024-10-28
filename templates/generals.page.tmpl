@@ -29,9 +29,14 @@
     </div>
     <div class="row">
         <div class="col text-center">
-            <a id="check-availability-button" href="/make-reservation" class="btn btn-success">Make Reservation</a>
+            <a id="check-availability-button" href="#!" class="btn btn-success">Check Availability</a>
         </div>
     </div>
 </div>
 {{ end }}
+
+{{ define "scripts"}}
+<script src="/static/js/checkAvailability.js"></script>
+{{end}}
+
 {{ template "footer" .}}

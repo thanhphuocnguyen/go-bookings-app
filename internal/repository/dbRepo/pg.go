@@ -23,9 +23,9 @@ func (m *PGRepository) InsertReservation(res *models.Reservation) (int64, error)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	sql := fmt.Sprintf(`insert into %s 
-		(id, user_id, room_id, start_date, end_date, phone) 
-		values ($1, $2, $3, $4, $5, $6)`, ReservationTable)
-	rs, err := m.DB.ExecContext(ctx, sql, 1, res.UserId, res.RoomId, res.StartDate, res.EndDate, res.Phone)
+		(user_id, room_id, email, first_name, last_name, phone, start_date, end_date) 
+		values ($1, $2, $3, $4, $5, $6, $7, $8)`, ReservationTable)
+	rs, err := m.DB.ExecContext(ctx, sql, res.UserId, res.RoomId, res.Email, res.FirstName, res.LastName, res.Phone, res.StartDate, res.EndDate)
 	if err != nil {
 		log.Println(err)
 		return 0, err
@@ -108,4 +108,19 @@ func (m *PGRepository) SearchAvailabilityInRange(start, end time.Time) ([]models
 	}
 
 	return rooms, nil
+}
+
+func (m *PGRepository) GetRoomById(id int) (models.Room, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf(`select id, name, description, occupancy, quantity, created_at, updated_at from %s where id = $1`, RoomTable)
+	var room models.Room
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(&room.ID, &room.Name, &room.CreatedAt, &room.UpdatedAt)
+
+	if err != nil {
+		return room, err
+	}
+
+	return room, nil
 }

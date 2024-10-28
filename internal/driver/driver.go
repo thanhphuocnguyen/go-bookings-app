@@ -21,8 +21,8 @@ const (
 	maxDbLifeTime = 5 * time.Minute
 )
 
-func GetDB(connectionString string) (*DB, error) {
-	d, err := ConnectDatabase(connectionString)
+func InitializeDatabase(connectionString string) (*DB, error) {
+	d, err := connectDatabase(connectionString)
 	if err != nil {
 		panic(err)
 	}
@@ -36,7 +36,7 @@ func GetDB(connectionString string) (*DB, error) {
 	return dbConn, nil
 }
 
-func ConnectDatabase(connectionString string) (*sql.DB, error) {
+func connectDatabase(connectionString string) (*sql.DB, error) {
 	db, err := sql.Open("pgx", connectionString)
 	if err != nil {
 		return nil, err

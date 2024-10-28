@@ -14,4 +14,6 @@ type DatabaseRepo interface {
 
 	CheckIfRoomAvailableByDate(roomId int, start, end time.Time) (bool, error)
 	SearchAvailabilityInRange(start, end time.Time) ([]models.Room, error)
+
+	GetRoomById(id int) (models.Room, error)
 }

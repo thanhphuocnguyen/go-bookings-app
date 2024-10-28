@@ -38,6 +38,10 @@ func main() {
 
 func run() (*driver.DB, error) {
 	gob.Register(models.Reservation{})
+	gob.Register(models.Restriction{})
+	gob.Register(models.RoomRestriction{})
+	gob.Register(models.User{})
+	gob.Register(models.Room{})
 	// Initialize the template cache
 	templateCache, err := render.InitTemplateCache()
 	if err != nil {
@@ -60,7 +64,7 @@ func run() (*driver.DB, error) {
 	appConfig.Session.Cookie.Secure = appConfig.InProduction
 
 	// Initialize Database
-	db, err := driver.GetDB("host=localhost port=5432 dbname=go_bookings user=postgres password=postgres sslmode=disable")
+	db, err := driver.InitializeDatabase("host=localhost port=5432 dbname=go_bookings user=postgres password=postgres sslmode=disable")
 
 	if err != nil {
 		log.Fatalln("Cannot connect to database: ", err)
@@ -70,7 +74,7 @@ func run() (*driver.DB, error) {
 	helpers.InitHelper(&appConfig)
 	render.InitializeRender(&appConfig)
 	// Initialize a new repository
-	repo := handlers.NewRepo(&appConfig, db)
-	handlers.InitRepo(repo)
+	repo := handlers.InitializeRepository(&appConfig, db)
+	handlers.SetRepository(repo)
 	return db, nil
 }

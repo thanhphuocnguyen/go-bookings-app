@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/justinas/nosurf"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/config"
+	"github.com/thanhphuocnguyen/go-bookings-app/internal/driver"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/models"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/render"
 )
@@ -66,9 +67,13 @@ func getRoutes() http.Handler {
 
 	render.InitializeRender(&appConfig)
 
+	db, err := driver.InitializeDatabase("host=localhost port=5432 dbname=go_bookings user=postgres password=postgres")
+	if err != nil {
+		log.Fatalln("Cannot connect to database: ", err)
+	}
 	// Initialize a new repository
-	repo := NewRepo(&appConfig)
-	InitRepo(repo)
+	repo := InitializeRepository(&appConfig, db)
+	SetRepository(repo)
 
 	mux := chi.NewRouter()
 
