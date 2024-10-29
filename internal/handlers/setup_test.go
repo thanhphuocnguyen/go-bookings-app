@@ -88,15 +88,15 @@ func getRoutes() http.Handler {
 	mux.Get("/", Repo.Home)
 	mux.Get("/about", Repo.About)
 	mux.Get("/contact", Repo.Contact)
-	mux.Get("/generals-quarters", Repo.Generals)
-	mux.Get("/majors-suite", Repo.Majors)
+	// mux.Get("/generals-quarters", Repo.Generals)
+	// mux.Get("/majors-suite", Repo.Majors)
 
 	mux.Get("/make-reservation", Repo.Reservation)
-	mux.Post("/make-reservation", Repo.PostReservation)
+	mux.Post("/make-reservation", Repo.CreateReservation)
 	mux.Get("/reservation-summary", Repo.ReservationSummary)
 
 	mux.Get("/search-availability", Repo.Availability)
-	mux.Post("/search-availability", Repo.PostAvailability)
+	mux.Post("/search-availability", Repo.SearchAvailability)
 	mux.Post("/search-availability-json", Repo.AvailabilityJSON)
 
 	return mux

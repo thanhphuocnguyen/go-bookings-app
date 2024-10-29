@@ -2,6 +2,9 @@ CREATE TABLE
     "rooms" (
         "id" SERIAL PRIMARY KEY,
         "name" varchar,
+        "description" text,
+        "slug" varchar UNIQUE NOT NULL,
+        "price" decimal NOT NULL,
         "created_at" timestamp DEFAULT (now ()),
         "updated_at" timestamp DEFAULT (now ())
     );

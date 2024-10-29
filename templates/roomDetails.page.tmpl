@@ -1,0 +1,104 @@
+{{ template "base" . }}
+
+{{ define "title" }}Room Details{{ end }}
+{{ define "content" }}
+{{ $room := index .Data "room" }}
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <img src="/static/images/{{$room.Slug}}.png" class="img-fluid img-thumbnail mx-auto d-block room-image"
+                alt="room image">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h1 class="text-center mt-4">{{$room.Name}}</h1>
+            <h3>Price: {{$room.Price}}$ / day</h3>
+            <p>
+                {{$room.Description}}
+            </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col text-center">
+            <a id="check-availability-button" href="#!" class="btn btn-success">Check Availability</a>
+        </div>
+    </div>
+</div>
+{{ end }}
+
+{{ define "scripts"}}
+<script>
+    document
+    .getElementById('check-availability-button')
+    .addEventListener('click', function () {
+    let html = `
+        <form id="check-availability-form" action="" method="post" novalidate class="needs-validation">
+            <div class="form-row">
+                <div class="col">
+                    <div class="form-row" id="reservation-dates-modal">
+                        <div class="col">
+                            <input disabled required class="form-control" type="text" name="start" id="start" placeholder="Arrival">
+                        </div>
+                        <div class="col">
+                            <input disabled required class="form-control" type="text" name="end" id="end" placeholder="Departure">
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </form>
+    `;
+
+    attention.custom({
+        icon: "",
+        title: 'Choose your dates',
+        msg: html,
+        willOpen: () => {
+            const elem = document.getElementById('reservation-dates-modal');
+            new DateRangePicker(elem, {
+            format: 'yyyy-mm-dd',
+            showOnFocus: true,
+            minDate: new Date(),
+            });
+        },
+        didOpen: () => {
+            document.getElementById('start').removeAttribute('disabled');
+            document.getElementById('end').removeAttribute('disabled');
+        },
+        callback: () => {
+            let form = document.getElementById('check-availability-form');
+            let formData = new FormData(form);
+            formData.append('csrf_token', '{{.CSRFToken}}');
+            formData.append('room_id', '{{.Data.room.ID}}');
+            fetch('/search-availability-json', {
+            method: 'post',
+            body: formData,
+            })
+            .then((response) => {
+                return response.json();
+            })
+            .then((data) => {
+                if (data.ok) {
+                attention.custom({
+                    icon: 'success',
+                    showConfirmButton: false,
+                    showCancelButton: false,
+                    msg: `<p>Room is available!</p>
+                        <p><a href="/book-room?id={{.Data.room.ID}}&start_date=${data.start_date}&end_date=${data.end_date}">Book now!</a></p>`,
+                });
+                } else {
+                attention.error({
+                    icon: 'error',
+                    msg: 'Room is not available!',
+                });
+                }
+            });
+        },
+        });
+  });
+
+</script>
+{{end}}
+
+{{ template "footer" .}}

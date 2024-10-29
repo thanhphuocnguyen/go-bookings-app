@@ -40,17 +40,20 @@ type Restriction struct {
 }
 
 type Room struct {
-	ID        int
-	Name      string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID          int
+	Name        string
+	Price       float32
+	Description string
+	Slug        string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 type RoomRestriction struct {
 	ID            int
-	RoomId        int64
-	RestrictionId int64
-	ReservationId int64
+	RoomId        int
+	RestrictionId int
+	ReservationId int
 	StartDate     time.Time
 	EndDate       time.Time
 	CreatedAt     time.Time

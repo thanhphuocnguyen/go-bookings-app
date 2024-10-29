@@ -49,3 +49,9 @@ func (f *Form) IsEmail(field string) {
 		f.Errors.Add(field, "Invalid email address")
 	}
 }
+
+func (f *Form) IsDateTime(field string) {
+	if govalidator.IsTime(f.Get(field), "2006-01-02") {
+		f.Errors.Add(field, "Invalid date format")
+	}
+}

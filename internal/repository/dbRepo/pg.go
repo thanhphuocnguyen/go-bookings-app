@@ -19,26 +19,21 @@ func (m *PGRepository) AllUsers() bool {
 	return true
 }
 
-func (m *PGRepository) InsertReservation(res *models.Reservation) (int64, error) {
+func (m *PGRepository) InsertReservation(res *models.Reservation) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	sql := fmt.Sprintf(`insert into %s 
 		(user_id, room_id, email, first_name, last_name, phone, start_date, end_date) 
-		values ($1, $2, $3, $4, $5, $6, $7, $8)`, ReservationTable)
-	rs, err := m.DB.ExecContext(ctx, sql, res.UserId, res.RoomId, res.Email, res.FirstName, res.LastName, res.Phone, res.StartDate, res.EndDate)
+		values ($1, $2, $3, $4, $5, $6, $7, $8) returning id`, ReservationTable)
+	var newId int
+	err := m.DB.QueryRowContext(ctx, sql, res.UserId, res.RoomId, res.Email, res.FirstName, res.LastName, res.Phone, res.StartDate, res.EndDate).Scan(&newId)
 	if err != nil {
 		log.Println(err)
 		return 0, err
 	}
 
-	newId, err := rs.LastInsertId()
+	log.Println("New reservation id: ", newId)
 
-	if err != nil {
-		log.Println(err)
-		return 0, err
-	}
-
-	log.Println(rs)
 	return newId, nil
 }
 
@@ -61,12 +56,14 @@ func (m *PGRepository) CheckIfRoomAvailableByDate(roomId int, start, end time.Ti
 	defer cancel()
 
 	query := fmt.Sprintf(`
-		select count(id) from %s
-			where room_id = $1 and $2 < end_date and $3 > start_date
+		select count(id) 
+		from %s
+			where room_id = $1 and $2 <= end_date and $3 >= start_date
 	`, RoomRestrictionTable)
 	var numRows int
-	err := m.DB.QueryRowContext(ctx, query, roomId, start, end).Scan(&numRows)
 
+	err := m.DB.QueryRowContext(ctx, query, roomId, start, end).Scan(&numRows)
+	log.Println("numRows: ", numRows)
 	if err != nil {
 		log.Println(err)
 		return false, err
@@ -114,13 +111,53 @@ func (m *PGRepository) GetRoomById(id int) (models.Room, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := fmt.Sprintf(`select id, name, description, occupancy, quantity, created_at, updated_at from %s where id = $1`, RoomTable)
+	query := fmt.Sprintf(`select id, name, description, slug, price, created_at, updated_at from %s where id = $1`, RoomTable)
 	var room models.Room
-	err := m.DB.QueryRowContext(ctx, query, id).Scan(&room.ID, &room.Name, &room.CreatedAt, &room.UpdatedAt)
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(&room.ID, &room.Name, &room.Description, &room.Slug, &room.Price, &room.CreatedAt, &room.UpdatedAt)
 
 	if err != nil {
 		return room, err
 	}
 
 	return room, nil
+}
+
+func (m *PGRepository) GetRoomBySlug(slug string) (models.Room, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	query := fmt.Sprintf(`select id, name, description, slug, price, created_at, updated_at from %s where slug = $1`, RoomTable)
+	var room models.Room
+	err := m.DB.QueryRowContext(ctx, query, slug).Scan(&room.ID, &room.Name, &room.Description, &room.Slug, &room.Price, &room.CreatedAt, &room.UpdatedAt)
+
+	if err != nil {
+		log.Println(err)
+		return room, err
+	}
+
+	return room, nil
+}
+
+func (m *PGRepository) GetRooms() ([]models.Room, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf(`select * from %s`, RoomTable)
+
+	rooms := []models.Room{}
+	rows, err := m.DB.QueryContext(ctx, query)
+
+	if err != nil {
+		log.Println(err)
+		return []models.Room{}, err
+	}
+	for rows.Next() {
+		var room models.Room
+		err := rows.Scan(&room.ID, &room.Name, &room.Description, &room.Slug, &room.Price, &room.CreatedAt, &room.UpdatedAt)
+		if err != nil {
+			return []models.Room{}, err
+		}
+		rooms = append(rooms, room)
+	}
+
+	return rooms, nil
 }

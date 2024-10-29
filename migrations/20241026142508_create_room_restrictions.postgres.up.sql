@@ -1,7 +1,7 @@
 CREATE TABLE
     "restrictions" (
         "id" SERIAL PRIMARY KEY,
-        "name" varchar NOT NULL,
+        "name" varchar UNIQUE NOT NULL,
         "created_at" timestamp DEFAULT (now ()),
         "updated_at" timestamp DEFAULT (now ())
     );

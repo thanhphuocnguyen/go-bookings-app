@@ -36,4 +36,17 @@
     </div>
 </div>
 {{end}}
+{{ define ".scripts" }}
+<script>
+    const elem = document.getElementById('reservation-dates');
+    new DateRangePicker(elem, {
+        format: 'yyyy-mm-dd',
+        showOnFocus: true,
+        autoApply: true,
+        singleDatePicker: false,
+        showDropdowns: true,
+        minDate: new Date(),
+    });
+</script>
+{{ end }}
 {{ template "footer" .}}

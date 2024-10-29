@@ -1,2 +1,0 @@
-ALTER TABLE "rooms" DROP CONSTRAINT "unique_name";
-ALTER TABLE "rooms" ALTER COLUMN "name" DROP NOT NULL;

@@ -85,16 +85,24 @@ function Prompt() {
   };
 
   async function custom(c) {
-    const { msg = '', title = '' } = c;
+    const {
+      msg = '',
+      title = '',
+      icon = 'success',
+      showConfirmButton = true,
+      showCancelButton = true,
+    } = c;
 
     const { value: result } = await Swal.fire({
-      title: title,
+      title,
+      icon,
       html: msg,
       backdrop: false,
       focusConfirm: false,
-      showCancelButton: true,
+      showCancelButton,
       willOpen: c?.willOpen,
       didOpen: c?.didOpen,
+      showConfirmButton,
       preConfirm: () => {
         return [
           document.getElementById('start').value,

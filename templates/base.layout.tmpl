@@ -56,9 +56,7 @@
                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Rooms
                     </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                        <a class="dropdown-item" href="/generals-quarters">General's Quarters</a>
-                        <a class="dropdown-item" href="/majors-suite">Major's Suite</a>
+                    <div class="dropdown-menu" id="room-lists" aria-labelledby="navbarDropdownMenuLink">
                     </div>
                 </li>
                 <li class="nav-item">
@@ -96,6 +94,21 @@
         {{with .Warning}}
             notify("{{.}}", "warning");
         {{end}}
+
+        (()=> {
+            fetch('/get-all-rooms').then(res => res.json()).then(data => {
+                if(data.rooms.length) {
+                    const roomList = document.getElementById('room-lists');
+                    data.rooms.forEach(room => {
+                        const roomLink = document.createElement('a');
+                        roomLink.classList.add('dropdown-item');
+                        roomLink.href = `/rooms/${room.Slug}`;
+                        roomLink.textContent = room.Name;
+                        roomList.appendChild(roomLink);
+                    });
+                }
+            });
+        })();
     </script>
 
     {{block "scripts" .}} {{end}}
