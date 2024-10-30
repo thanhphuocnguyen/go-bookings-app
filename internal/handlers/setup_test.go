@@ -6,7 +6,9 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
+	"testing"
 	"time"
 
 	"github.com/alexedwards/scs/v2"
@@ -14,7 +16,6 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/justinas/nosurf"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/config"
-	"github.com/thanhphuocnguyen/go-bookings-app/internal/driver"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/models"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/render"
 )
@@ -27,24 +28,12 @@ const (
 	pageSuffix      = ".page.tmpl"
 )
 
-func NoSurf(next http.Handler) http.Handler {
-	csrf := nosurf.New(next)
-	csrf.SetBaseCookie(http.Cookie{
-		HttpOnly: true,
-		Path:     "/",
-		Secure:   appConfig.InProduction,
-		SameSite: http.SameSiteLaxMode,
-	})
-
-	return csrf
-}
-
-func SessionLoad(next http.Handler) http.Handler {
-	return appConfig.Session.LoadAndSave(next)
-}
-
-func getRoutes() http.Handler {
+func TestMain(m *testing.M) {
 	gob.Register(models.Reservation{})
+	gob.Register(models.Restriction{})
+	gob.Register(models.RoomRestriction{})
+	gob.Register(models.User{})
+	gob.Register(models.Room{})
 	// Initialize the template cache
 	templateCache, err := InitTemplateCache()
 	if err != nil {
@@ -65,15 +54,32 @@ func getRoutes() http.Handler {
 	appConfig.InfoLog = *log.New(log.Writer(), "INFO\t", log.Ldate|log.Ltime)
 	appConfig.ErrorLog = *log.New(log.Writer(), "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	render.InitializeRender(&appConfig)
+	render.InitializeRenderer(&appConfig)
 
-	db, err := driver.InitializeDatabase("host=localhost port=5432 dbname=go_bookings user=postgres password=postgres")
-	if err != nil {
-		log.Fatalln("Cannot connect to database: ", err)
-	}
 	// Initialize a new repository
-	repo := InitializeRepository(&appConfig, db)
+	repo := InitializeTestingRepository(&appConfig)
 	SetRepository(repo)
+
+	os.Exit(m.Run())
+}
+
+func NoSurf(next http.Handler) http.Handler {
+	csrf := nosurf.New(next)
+	csrf.SetBaseCookie(http.Cookie{
+		HttpOnly: true,
+		Path:     "/",
+		Secure:   appConfig.InProduction,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	return csrf
+}
+
+func SessionLoad(next http.Handler) http.Handler {
+	return appConfig.Session.LoadAndSave(next)
+}
+
+func getRoutes() http.Handler {
 
 	mux := chi.NewRouter()
 

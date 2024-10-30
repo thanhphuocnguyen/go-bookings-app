@@ -14,7 +14,7 @@ func TestAddDefaultData(t *testing.T) {
 		t.Error(err)
 	}
 	app.Session.Put(request.Context(), "flash", "123")
-	result := AddDefaultData(&data, request)
+	result := ApplyDefaultData(&data, request)
 
 	if result == nil {
 		t.Error("Expected a pointer to TemplateData, but got nil")
@@ -38,7 +38,7 @@ func (mw *myWriter) Write(b []byte) (int, error) {
 }
 
 func TestRenderTemplate(t *testing.T) {
-	tc, err := InitTemplateCache()
+	tc, err := InitializeTmplCache()
 	if err != nil {
 		t.Error(err)
 	}
@@ -51,13 +51,13 @@ func TestRenderTemplate(t *testing.T) {
 
 	var ww myWriter
 
-	err = RenderTemplate(&ww, r, "home.page.tmpl", &models.TemplateData{})
+	err = RenderTmpl(&ww, r, "home.page.tmpl", &models.TemplateData{})
 
 	if err != nil {
 		t.Error("Error writing template to browser: ", err)
 	}
 
-	err = RenderTemplate(&ww, r, "non-existent.page.tmpl", &models.TemplateData{})
+	err = RenderTmpl(&ww, r, "non-existent.page.tmpl", &models.TemplateData{})
 	if err == nil {
 		t.Error("Rendered template that does not exist")
 	}

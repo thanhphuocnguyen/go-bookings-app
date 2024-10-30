@@ -18,7 +18,7 @@ var function = template.FuncMap{}
 
 var app *config.AppConfig
 
-func InitializeRender(appConfig *config.AppConfig) {
+func InitializeRenderer(appConfig *config.AppConfig) {
 	app = appConfig
 }
 
@@ -28,7 +28,7 @@ var (
 	pageSuffix      = ".page.tmpl"
 )
 
-func AddDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateData {
+func ApplyDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateData {
 	td.CSRFToken = nosurf.Token(r)
 	td.Flash = app.Session.PopString(r.Context(), "flash")
 	td.Warning = app.Session.PopString(r.Context(), "warning")
@@ -36,16 +36,16 @@ func AddDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateDa
 	return td
 }
 
-func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data *models.TemplateData) error {
+func RenderTmpl(w http.ResponseWriter, r *http.Request, tmpl string, data *models.TemplateData) error {
 	var templateCache map[string]*template.Template
 	if app.UseCache {
 		templateCache = app.TemplateCache
 	} else {
-		templateCache, _ = InitTemplateCache()
+		templateCache, _ = InitializeTmplCache()
 	}
 	buffer := new(bytes.Buffer)
 	if tmpl, ok := templateCache[tmpl]; ok {
-		data = AddDefaultData(data, r)
+		data = ApplyDefaultData(data, r)
 		err := tmpl.Execute(buffer, data)
 		if err != nil {
 			log.Println("Error executing template: ", err)
@@ -62,7 +62,7 @@ func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, data *m
 	return nil
 }
 
-func InitTemplateCache() (map[string]*template.Template, error) {
+func InitializeTmplCache() (map[string]*template.Template, error) {
 	cache := make(map[string]*template.Template)
 	tmplFiles, err := filepath.Glob(fmt.Sprintf("%s/*%s", pathToTemplates, pageSuffix))
 	if err != nil {

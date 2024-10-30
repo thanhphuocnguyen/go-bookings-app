@@ -43,7 +43,7 @@ func run() (*driver.DB, error) {
 	gob.Register(models.User{})
 	gob.Register(models.Room{})
 	// Initialize the template cache
-	templateCache, err := render.InitTemplateCache()
+	templateCache, err := render.InitializeTmplCache()
 	if err != nil {
 		log.Fatalln("Error parsing templates: ", err)
 		return nil, err
@@ -72,7 +72,7 @@ func run() (*driver.DB, error) {
 	}
 
 	helpers.InitHelper(&appConfig)
-	render.InitializeRender(&appConfig)
+	render.InitializeRenderer(&appConfig)
 	// Initialize a new repository
 	repo := handlers.InitializeRepository(&appConfig, db)
 	handlers.SetRepository(repo)

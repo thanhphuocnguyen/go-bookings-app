@@ -13,13 +13,37 @@ const (
 	ReservationTable     = "reservations"
 	RoomRestrictionTable = "room_restrictions"
 	RoomTable            = "rooms"
+	UserTable            = "users"
 )
 
-func (m *PGRepository) AllUsers() bool {
-	return true
+func (m *pgRepository) AllUsers() ([]models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf(`select * from %s`, UserTable)
+	rows, err := m.DB.QueryContext(ctx, query)
+
+	if err != nil {
+		log.Println(err)
+		return []models.User{}, err
+	}
+
+	users := []models.User{}
+
+	for rows.Next() {
+		var user models.User
+		err := rows.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.AccessLevel, &user.CreatedAt, &user.UpdatedAt)
+		users = append(users, user)
+		if err != nil {
+			log.Println(err)
+			return []models.User{}, err
+		}
+	}
+
+	return users, nil
 }
 
-func (m *PGRepository) InsertReservation(res *models.Reservation) (int, error) {
+func (m *pgRepository) InsertReservation(res *models.Reservation) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	sql := fmt.Sprintf(`insert into %s 
@@ -37,7 +61,7 @@ func (m *PGRepository) InsertReservation(res *models.Reservation) (int, error) {
 	return newId, nil
 }
 
-func (m *PGRepository) InsertRoomRestriction(res *models.RoomRestriction) error {
+func (m *pgRepository) InsertRoomRestriction(res *models.RoomRestriction) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	sql := fmt.Sprintf(`insert into %s 
@@ -51,7 +75,7 @@ func (m *PGRepository) InsertRoomRestriction(res *models.RoomRestriction) error 
 	return nil
 }
 
-func (m *PGRepository) CheckIfRoomAvailableByDate(roomId int, start, end time.Time) (bool, error) {
+func (m *pgRepository) CheckIfRoomAvailableByDate(roomId int, start, end time.Time) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -76,7 +100,7 @@ func (m *PGRepository) CheckIfRoomAvailableByDate(roomId int, start, end time.Ti
 	return false, nil
 }
 
-func (m *PGRepository) SearchAvailabilityInRange(start, end time.Time) ([]models.Room, error) {
+func (m *pgRepository) SearchAvailabilityInRange(start, end time.Time) ([]models.Room, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -107,7 +131,7 @@ func (m *PGRepository) SearchAvailabilityInRange(start, end time.Time) ([]models
 	return rooms, nil
 }
 
-func (m *PGRepository) GetRoomById(id int) (models.Room, error) {
+func (m *pgRepository) GetRoomById(id int) (models.Room, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -122,7 +146,7 @@ func (m *PGRepository) GetRoomById(id int) (models.Room, error) {
 	return room, nil
 }
 
-func (m *PGRepository) GetRoomBySlug(slug string) (models.Room, error) {
+func (m *pgRepository) GetRoomBySlug(slug string) (models.Room, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	query := fmt.Sprintf(`select id, name, description, slug, price, created_at, updated_at from %s where slug = $1`, RoomTable)
@@ -137,7 +161,7 @@ func (m *PGRepository) GetRoomBySlug(slug string) (models.Room, error) {
 	return room, nil
 }
 
-func (m *PGRepository) GetRooms() ([]models.Room, error) {
+func (m *pgRepository) GetRooms() ([]models.Room, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
