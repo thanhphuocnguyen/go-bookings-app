@@ -3,4 +3,6 @@ database.yml
 
 # ignore all built files
 bookings
-.out
+*.out
+*.log
+.DS_Store
