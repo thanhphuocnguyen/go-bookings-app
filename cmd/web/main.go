@@ -22,7 +22,15 @@ var appConfig config.AppConfig
 
 func main() {
 	db, err := run()
+
+	if err != nil {
+		log.Fatalln("Error starting application: ", err)
+	}
 	defer db.SQL.Close()
+	defer close(appConfig.MailChan)
+
+	listenForMail()
+
 	if err != nil {
 		log.Fatalln("Error starting application: ", err)
 	}
@@ -48,6 +56,9 @@ func run() (*driver.DB, error) {
 		log.Fatalln("Error parsing templates: ", err)
 		return nil, err
 	}
+
+	mailChan := make(chan models.MailData)
+	appConfig.MailChan = mailChan
 
 	appConfig.TemplateCache = templateCache
 	// This is the entry point of the application

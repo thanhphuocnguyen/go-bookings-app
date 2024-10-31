@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/alexedwards/scs/v2"
+	"github.com/thanhphuocnguyen/go-bookings-app/internal/models"
 )
 
 type AppConfig struct {
@@ -14,4 +15,5 @@ type AppConfig struct {
 	TemplateCache map[string]*template.Template
 	InProduction  bool
 	Session       *scs.SessionManager
+	MailChan      chan models.MailData
 }

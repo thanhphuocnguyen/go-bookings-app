@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -147,6 +148,22 @@ func (m *Repository) CreateReservation(w http.ResponseWriter, r *http.Request) {
 		RestrictionId: 1,
 		ReservationId: newResId,
 	}
+
+	htmlMEssage := fmt.Sprintf(`
+		<strong>Reservation Confirmation</strong><br>
+		Dear %s,<br>
+		This is to confirm your reservation from %s to %s.
+	`, reservation.FirstName, reservation.StartDate.Format(layout), reservation.EndDate.Format(layout))
+
+	msg := models.MailData{
+		To:       "john@doe.ca",
+		From:     "universal@booking.com",
+		Subject:  "Reservation Confirmation",
+		Content:  htmlMEssage,
+		Template: "basic.html",
+	}
+
+	m.App.MailChan <- msg
 
 	err = m.DB.InsertRoomRestriction(&roomRestriction)
 

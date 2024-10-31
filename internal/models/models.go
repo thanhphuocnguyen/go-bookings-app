@@ -61,3 +61,11 @@ type RoomRestriction struct {
 	Room          Room
 	Restriction   Restriction
 }
+
+type MailData struct {
+	To       string
+	From     string
+	Subject  string
+	Content  string
+	Template string
+}

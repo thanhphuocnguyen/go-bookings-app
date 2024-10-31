@@ -45,6 +45,13 @@ func TestMain(m *testing.M) {
 	appConfig.InProduction = false
 	appConfig.UseCache = true
 
+	mailChan := make(chan models.MailData)
+	appConfig.MailChan = mailChan
+
+	defer close(mailChan)
+
+	listenForMail()
+
 	appConfig.Session = scs.New()
 	appConfig.Session.Lifetime = 24 * time.Hour
 	appConfig.Session.Cookie.Persist = true
@@ -61,6 +68,14 @@ func TestMain(m *testing.M) {
 	SetRepository(repo)
 
 	os.Exit(m.Run())
+}
+
+func listenForMail() {
+	go func() {
+		for {
+			<-appConfig.MailChan
+		}
+	}()
 }
 
 func NoSurf(next http.Handler) http.Handler {
