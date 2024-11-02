@@ -1,0 +1,2 @@
+ALTER TABLE reservations
+    ADD COLUMN processed BOOLEAN DEFAULT FALSE NOT NULL;

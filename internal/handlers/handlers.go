@@ -47,15 +47,15 @@ func InitializeTestingRepository(a *config.AppConfig) *Repository {
 
 func (m *Repository) Home(w http.ResponseWriter, r *http.Request) {
 	m.DB.AllUsers()
-	render.RenderTmpl(w, r, "home.page.tmpl", &models.TemplateData{})
+	render.Template(w, r, "home.page.tmpl", &models.TemplateData{})
 }
 
 func (m *Repository) About(w http.ResponseWriter, r *http.Request) {
-	render.RenderTmpl(w, r, "about.page.tmpl", &models.TemplateData{})
+	render.Template(w, r, "about.page.tmpl", &models.TemplateData{})
 }
 
 func (m *Repository) Contact(w http.ResponseWriter, r *http.Request) {
-	render.RenderTmpl(w, r, "contact.page.tmpl", &models.TemplateData{})
+	render.Template(w, r, "contact.page.tmpl", &models.TemplateData{})
 }
 
 func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
@@ -87,7 +87,7 @@ func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 	data["reservation"] = emptyReservation
 
-	render.RenderTmpl(w, r, "makeReservation.page.tmpl", &models.TemplateData{
+	render.Template(w, r, "makeReservation.page.tmpl", &models.TemplateData{
 		Form:      forms.New(nil),
 		Data:      data,
 		StringMap: strMap,
@@ -126,7 +126,7 @@ func (m *Repository) CreateReservation(w http.ResponseWriter, r *http.Request) {
 		data := make(map[string]interface{})
 		data["reservation"] = reservation
 		http.Error(w, "Form is not valid", http.StatusSeeOther)
-		render.RenderTmpl(w, r, "makeReservation.page.tmpl", &models.TemplateData{
+		render.Template(w, r, "makeReservation.page.tmpl", &models.TemplateData{
 			Form: f,
 			Data: data,
 		})
@@ -193,7 +193,7 @@ func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) 
 	strMap["end_date"] = reservation.EndDate.Format(layout)
 	data := make(map[string]interface{})
 	data["reservation"] = reservation
-	render.RenderTmpl(w, r, "reservationSummary.page.tmpl", &models.TemplateData{
+	render.Template(w, r, "reservationSummary.page.tmpl", &models.TemplateData{
 		Data:      data,
 		StringMap: strMap,
 	})
@@ -219,13 +219,13 @@ func (m *Repository) Room(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 	data["room"] = room
 
-	render.RenderTmpl(w, r, "roomDetails.page.tmpl", &models.TemplateData{
+	render.Template(w, r, "roomDetails.page.tmpl", &models.TemplateData{
 		Data: data,
 	})
 }
 
 func (m *Repository) Availability(w http.ResponseWriter, r *http.Request) {
-	render.RenderTmpl(w, r, "searchAvailability.page.tmpl", &models.TemplateData{
+	render.Template(w, r, "searchAvailability.page.tmpl", &models.TemplateData{
 		Form: forms.New(nil),
 	})
 }
@@ -269,7 +269,7 @@ func (m *Repository) SearchAvailability(w http.ResponseWriter, r *http.Request) 
 
 	m.App.Session.Put(r.Context(), "reservation", res)
 
-	render.RenderTmpl(w, r, "chooseRoom.page.tmpl", &models.TemplateData{
+	render.Template(w, r, "chooseRoom.page.tmpl", &models.TemplateData{
 		Data: data})
 }
 
@@ -422,7 +422,7 @@ func (m *Repository) GetRoomList(w http.ResponseWriter, r *http.Request) {
 // }
 
 func (m *Repository) ShowLogin(w http.ResponseWriter, r *http.Request) {
-	render.RenderTmpl(w, r, "login.page.tmpl", &models.TemplateData{
+	render.Template(w, r, "login.page.tmpl", &models.TemplateData{
 		Form: forms.New(nil),
 	})
 }
@@ -446,7 +446,7 @@ func (m *Repository) PostLogin(w http.ResponseWriter, r *http.Request) {
 	if !f.Valid() {
 		strMap := make(map[string]string)
 		strMap["email"] = email
-		render.RenderTmpl(w, r, "login.page.tmpl", &models.TemplateData{
+		render.Template(w, r, "login.page.tmpl", &models.TemplateData{
 			Form:      f,
 			StringMap: strMap,
 		})
@@ -473,7 +473,7 @@ func (m *Repository) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *Repository) ShowRegistration(w http.ResponseWriter, r *http.Request) {
-	render.RenderTmpl(w, r, "registration.page.tmpl", &models.TemplateData{
+	render.Template(w, r, "registration.page.tmpl", &models.TemplateData{
 		Form: forms.New(nil),
 	})
 }
@@ -483,5 +483,173 @@ func (m *Repository) PostRegistration(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *Repository) AdminDashboard(w http.ResponseWriter, r *http.Request) {
-	render.RenderTmpl(w, r, "adminDashboard.page.tmpl", &models.TemplateData{})
+	render.Template(w, r, "adminDashboard.page.tmpl", &models.TemplateData{})
+}
+
+func (m *Repository) AdminNewReservations(w http.ResponseWriter, r *http.Request) {
+	reservations, err := m.DB.AllNewReservations()
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "Cannot get reservations from database")
+		http.Redirect(w, r, "/admin/dashboard", http.StatusTemporaryRedirect)
+		return
+	}
+	dataMap := make(map[string]interface{})
+	dataMap["reservations"] = reservations
+
+	render.Template(w, r, "adminNewReservations.page.tmpl", &models.TemplateData{
+		Data: dataMap,
+	})
+}
+
+func (m *Repository) AdminAllReservations(w http.ResponseWriter, r *http.Request) {
+	reservations, err := m.DB.AllReservations()
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "Cannot get reservations from database")
+		http.Redirect(w, r, "/admin/dashboard", http.StatusTemporaryRedirect)
+		return
+	}
+	dataMap := make(map[string]interface{})
+	dataMap["reservations"] = reservations
+	render.Template(w, r, "adminAllReservations.page.tmpl", &models.TemplateData{
+		Data: dataMap,
+	})
+}
+
+func (m *Repository) AdminReservationsCalendar(w http.ResponseWriter, r *http.Request) {
+	render.Template(w, r, "adminReservationsCalendar.page.tmpl", &models.TemplateData{})
+}
+
+func (m *Repository) AdminShowReservation(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "Cannot parse reservation id")
+		http.Redirect(w, r, "/admin/dashboard", http.StatusTemporaryRedirect)
+		return
+	}
+
+	reservation, err := m.DB.GetReservationById(id)
+
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "Cannot get reservation from database")
+		http.Redirect(w, r, "/admin/dashboard", http.StatusTemporaryRedirect)
+		return
+	}
+
+	dataMap := make(map[string]interface{})
+	dataMap["reservation"] = reservation
+
+	render.Template(w, r, "adminShowReservation.page.tmpl", &models.TemplateData{
+		Form: forms.New(nil),
+		Data: dataMap,
+	})
+}
+
+func (m *Repository) AdminEditReservation(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "Cannot parse reservation id")
+		http.Redirect(w, r, "/admin/dashboard", http.StatusTemporaryRedirect)
+		return
+	}
+
+	err = r.ParseForm()
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "Cannot parse form")
+		http.Redirect(w, r, "/admin/dashboard", http.StatusTemporaryRedirect)
+		return
+	}
+
+	reservation, err := m.DB.GetReservationById(id)
+
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "Cannot get reservation from database")
+		http.Redirect(w, r, "/admin/dashboard", http.StatusTemporaryRedirect)
+		return
+	}
+	f := forms.New(r.PostForm)
+	f.Required("first_name", "last_name", "email", "phone")
+	f.MinLength("first_name", 3, r)
+	f.MinLength("last_name", 3, r)
+	f.MinLength("phone", 10, r)
+	f.IsEmail("email")
+	dataMap := make(map[string]interface{})
+	dataMap["reservation"] = reservation
+	if !f.Valid() {
+		http.Error(w, "Form is not valid", http.StatusSeeOther)
+		render.Template(w, r, "adminShowReservation.page.tmpl", &models.TemplateData{
+			Form: f,
+			Data: dataMap,
+		})
+		return
+	}
+	reservation.FirstName = r.Form.Get("first_name")
+	reservation.LastName = r.Form.Get("last_name")
+	reservation.Email = r.Form.Get("email")
+	reservation.Phone = r.Form.Get("phone")
+
+	err = m.DB.UpdateReservation(reservation)
+
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "Cannot update reservation")
+		http.Redirect(w, r, "/admin/dashboard", http.StatusTemporaryRedirect)
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "flash", "Reservation updated")
+	render.Template(w, r, "adminShowReservation.page.tmpl", &models.TemplateData{
+		Form: f,
+		Data: dataMap,
+	})
+}
+
+func (m *Repository) AdminProcessedReservation(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "Cannot parse reservation id")
+		http.Redirect(w, r, "/admin/dashboard", http.StatusTemporaryRedirect)
+		return
+	}
+
+	processedStr := r.URL.Query().Get("processed")
+
+	if processedStr == "" {
+		m.App.Session.Put(r.Context(), "error", "Cannot parse processed value")
+		http.Redirect(w, r, "/admin/dashboard", http.StatusTemporaryRedirect)
+		return
+	}
+
+	processed := processedStr == "true"
+
+	err = m.DB.ProcessReservation(id, processed)
+
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "Cannot update reservation")
+		http.Redirect(w, r, "/admin/dashboard", http.StatusTemporaryRedirect)
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "flash", "Reservation processed")
+	http.Redirect(w, r, "/admin/dashboard", http.StatusSeeOther)
+}
+
+func (m *Repository) AdminDeleteReservation(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "Cannot parse reservation id")
+		http.Redirect(w, r, "/admin/dashboard", http.StatusTemporaryRedirect)
+		return
+	}
+
+	err = m.DB.DeleteReservation(id)
+
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "Cannot delete reservation")
+		http.Redirect(w, r, "/admin/dashboard", http.StatusTemporaryRedirect)
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "flash", "Reservation deleted")
+	http.Redirect(w, r, "/admin/dashboard", http.StatusSeeOther)
 }

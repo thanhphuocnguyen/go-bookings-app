@@ -26,6 +26,7 @@ let attention = Prompt();
 })();
 
 function notify(msg, msgType) {
+  console.log("hellop")
   notie.alert({
     type: msgType,
     text: msg,
@@ -91,32 +92,30 @@ function Prompt() {
       icon = 'success',
       showConfirmButton = true,
       showCancelButton = true,
+      preConfirm = () => {},
     } = c;
 
     const { value: result } = await Swal.fire({
       title,
       icon,
       html: msg,
-      backdrop: false,
+      backdrop: true,
       focusConfirm: false,
       showCancelButton,
       willOpen: c?.willOpen,
       didOpen: c?.didOpen,
       showConfirmButton,
-      preConfirm: () => {
-        return [
-          document.getElementById('start').value,
-          document.getElementById('end').value,
-        ];
-      },
+      preConfirm,
+      allowOutsideClick: true,
     });
+    console.log({result})
     if (result) {
       if (
         result.dismiss !== Swal.DismissReason.cancel &&
-        result.value !== '' &&
+        result !== '' &&
         c.callback
       ) {
-        c.callback(result.value);
+        c.callback(result);
       } else {
         c?.callback(false);
       }

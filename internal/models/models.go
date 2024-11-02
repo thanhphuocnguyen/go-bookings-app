@@ -28,6 +28,7 @@ type Reservation struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Phone     string
+	Processed bool
 	Room      Room
 	User      User
 }

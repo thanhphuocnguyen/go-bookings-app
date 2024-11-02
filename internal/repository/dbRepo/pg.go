@@ -18,6 +18,7 @@ const (
 	UserTable            = "users"
 )
 
+// User services
 func (m *pgRepository) AllUsers() ([]models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -70,6 +71,171 @@ func (m *pgRepository) UpdateUser(u models.User) error {
 
 	if err != nil {
 		log.Println("UpdateUser", err)
+		return err
+	}
+
+	return nil
+}
+
+func (m *pgRepository) Authenticate(email, testPassword string) (int, string, error) {
+	var id int
+	var hashedPassword string
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf("select id, password from %s where email=$1", UserTable)
+	err := m.DB.QueryRowContext(ctx, query, email).Scan(&id, &hashedPassword)
+
+	if err != nil {
+		log.Println("Authenticate", err)
+		return 0, "", err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(testPassword))
+
+	if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+		return 0, "", errors.New("password does not match")
+	} else if err != nil {
+		return 0, "", err
+	}
+	return id, hashedPassword, nil
+}
+
+// Reservation actions
+func (m *pgRepository) AllReservations() ([]models.Reservation, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf(`
+		select 
+			rs.id, rs.user_id, rs.room_id, rs.email, rs.first_name, rs.last_name, rs.phone, 
+			rs.start_date, rs.end_date, rs.processed, rs.created_at, rs.updated_at, r.id, r.name, r.price
+		from %s rs
+		left join %s r on rs.room_id = r.id
+	`, ReservationTable, RoomTable)
+
+	rows, err := m.DB.QueryContext(ctx, query)
+
+	if err != nil {
+		log.Println("AllReservations", err)
+		return []models.Reservation{}, err
+	}
+
+	var reservations []models.Reservation
+
+	for rows.Next() {
+		var res models.Reservation
+		err := rows.Scan(&res.ID, &res.UserId, &res.RoomId, &res.Email, &res.FirstName, &res.LastName, &res.Phone, &res.StartDate, &res.EndDate, &res.Processed, &res.CreatedAt, &res.UpdatedAt, &res.Room.ID, &res.Room.Name, &res.Room.Price)
+		if err != nil {
+			log.Println("AllReservations", err)
+			return []models.Reservation{}, err
+		}
+
+		reservations = append(reservations, res)
+	}
+
+	return reservations, nil
+}
+
+func (m *pgRepository) AllNewReservations() ([]models.Reservation, error) {
+	cxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf(`
+		select 
+			rs.id, rs.user_id, rs.room_id, rs.email, rs.first_name, rs.last_name, rs.phone, 
+			rs.start_date, rs.end_date, rs.created_at, rs.updated_at, r.id, r.name, r.price
+		from %s rs
+		left join %s r on rs.room_id = r.id
+		where rs.processed = false and rs.start_date > $1 and rs.end_date > $2
+	`, ReservationTable, RoomTable)
+
+	rows, err := m.DB.QueryContext(cxt, query, time.Now(), time.Now())
+
+	if err != nil || rows.Err() != nil {
+		log.Println("AllReservations", err)
+		return []models.Reservation{}, err
+	}
+
+	var reservations []models.Reservation
+
+	for rows.Next() {
+		var res models.Reservation
+		err := rows.Scan(&res.ID, &res.UserId, &res.RoomId, &res.Email, &res.FirstName, &res.LastName, &res.Phone, &res.StartDate, &res.EndDate, &res.CreatedAt, &res.UpdatedAt, &res.Room.ID, &res.Room.Name, &res.Room.Price)
+		if err != nil {
+			log.Println("AllReservations", err)
+			return []models.Reservation{}, err
+		}
+
+		reservations = append(reservations, res)
+	}
+
+	return reservations, nil
+
+}
+
+func (m *pgRepository) GetReservationById(id int) (models.Reservation, error) {
+	cxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf(`
+		select 
+			rs.id, rs.user_id, rs.room_id, rs.email, rs.first_name, rs.last_name, rs.phone, 
+			rs.start_date, rs.end_date, rs.processed, rs.created_at, rs.updated_at, r.id, r.name, r.price
+		from %s rs
+		left join %s r on rs.room_id = r.id
+		where rs.id = $1
+	`, ReservationTable, RoomTable)
+	var res models.Reservation
+	err := m.DB.QueryRowContext(cxt, query, id).Scan(&res.ID, &res.UserId, &res.RoomId, &res.Email, &res.FirstName, &res.LastName, &res.Phone, &res.StartDate, &res.EndDate, &res.Processed, &res.CreatedAt, &res.UpdatedAt, &res.Room.ID, &res.Room.Name, &res.Room.Price)
+
+	if err != nil {
+		log.Println("GetReservationById", err)
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (m *pgRepository) UpdateReservation(u models.Reservation) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf(`update %s set first_name=$1, last_name=$2, email=$3, phone=$4, updated_at=$5 where id=$6`, ReservationTable)
+	_, err := m.DB.ExecContext(ctx, query, u.FirstName, u.LastName, u.Email, u.Phone, time.Now(), u.ID)
+
+	if err != nil {
+		log.Println("UpdateReservation", err)
+		return err
+	}
+
+	return nil
+}
+
+func (m *pgRepository) DeleteReservation(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf(`delete from %s where id=$1`, ReservationTable)
+	_, err := m.DB.ExecContext(ctx, query, id)
+
+	if err != nil {
+		log.Println("DeleteReservation", err)
+		return err
+	}
+
+	return nil
+}
+
+func (m *pgRepository) ProcessReservation(id int, processed bool) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf(`update %s set processed=$1 where id=$2`, ReservationTable)
+	_, err := m.DB.ExecContext(ctx, query, processed, id)
+
+	if err != nil {
+		log.Println("ProcessReservation", err)
 		return err
 	}
 
@@ -223,28 +389,4 @@ func (m *pgRepository) GetRooms() ([]models.Room, error) {
 	}
 
 	return rooms, nil
-}
-
-func (m *pgRepository) Authenticate(email, testPassword string) (int, string, error) {
-	var id int
-	var hashedPassword string
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	query := fmt.Sprintf("select id, password from %s where email=$1", UserTable)
-	err := m.DB.QueryRowContext(ctx, query, email).Scan(&id, &hashedPassword)
-
-	if err != nil {
-		log.Println("Authenticate", err)
-		return 0, "", err
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(testPassword))
-
-	if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-		return 0, "", errors.New("password does not match")
-	} else if err != nil {
-		return 0, "", err
-	}
-	return id, hashedPassword, nil
 }
