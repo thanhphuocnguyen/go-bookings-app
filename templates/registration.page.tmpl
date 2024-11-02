@@ -1,0 +1,29 @@
+{{ template "base" . }}
+{{ define "title" }}Registration{{ end }}
+{{ define "content" }}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <h2 class="text-center">Registration</h2>
+            <form action="/user/register" method="post">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    {{ with .Form.Errors.Get "email"}}
+                    <label class="text-danger">{{.}}</label>
+                    {{end}}
+                    <input type="email" class="form-control" id="email" name="email" value="{{ index .StringMap "email" }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    {{ with .Form.Errors.Get "password"}}
+                    <label class="text-danger">{{.}}</label>
+                    {{end}}
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Register</button>
+            </form>
+        </div>
+    </div>
+</div>
+{{ end}}
+{{ template "footer" . }}

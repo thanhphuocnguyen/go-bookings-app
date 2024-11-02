@@ -36,5 +36,17 @@ func routes() http.Handler {
 	mux.Get("/book-room", handlers.Repo.BookRoom)
 	mux.Get("/get-all-rooms", handlers.Repo.GetRoomList)
 
+	// Users
+	mux.Get("/user/login", handlers.Repo.ShowLogin)
+	mux.Post("/user/login", handlers.Repo.PostLogin)
+	mux.Get("/user/logout", handlers.Repo.Logout)
+	mux.Get("/user/register", handlers.Repo.ShowRegistration)
+	mux.Post("/user/register", handlers.Repo.PostRegistration)
+
+	// Admin
+	mux.Route("/admin", func(r chi.Router) {
+		r.Use(Auth)
+		r.Get("/dashboard", handlers.Repo.AdminDashboard)
+	})
 	return mux
 }

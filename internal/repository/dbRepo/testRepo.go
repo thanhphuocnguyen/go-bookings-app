@@ -51,3 +51,15 @@ func (m *testDbRepo) GetRoomBySlug(slug string) (models.Room, error) {
 func (m *testDbRepo) GetRooms() ([]models.Room, error) {
 	return []models.Room{}, nil
 }
+
+func (m *testDbRepo) GetUserById(id int) (models.User, error) {
+	return models.User{}, nil
+}
+
+func (m *testDbRepo) UpdateUser(u models.User) error {
+	return nil
+}
+
+func (m *testDbRepo) Authenticate(email, testPassword string) (int, string, error) {
+	return 0, "", nil
+}

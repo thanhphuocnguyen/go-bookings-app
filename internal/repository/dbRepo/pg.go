@@ -2,11 +2,13 @@ package dbRepo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -20,7 +22,7 @@ func (m *pgRepository) AllUsers() ([]models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := fmt.Sprintf(`select * from %s`, UserTable)
+	query := fmt.Sprintf(`select id, first_name, last_name, email, password, access_level, created_at, updated_at from %s`, UserTable)
 	rows, err := m.DB.QueryContext(ctx, query)
 
 	if err != nil {
@@ -35,12 +37,43 @@ func (m *pgRepository) AllUsers() ([]models.User, error) {
 		err := rows.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Password, &user.AccessLevel, &user.CreatedAt, &user.UpdatedAt)
 		users = append(users, user)
 		if err != nil {
-			log.Println(err)
+			log.Println("AllUsers", err)
 			return []models.User{}, err
 		}
 	}
 
 	return users, nil
+}
+
+func (m *pgRepository) GetUserById(id int) (models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	var user models.User
+	query := fmt.Sprintf(`select id, email, phone, first_name, last_name, password, access_level from %s where id=$1`, UserTable)
+
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(&user.ID, &user.Email, &user.Phone, &user.FirstName, &user.LastName, &user.AccessLevel)
+
+	if err != nil {
+		log.Println("GetUserById", err)
+		return user, err
+	}
+
+	return user, nil
+}
+
+func (m *pgRepository) UpdateUser(u models.User) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf(`update %s set email=$1, phone=$2, first_name=$3, last_name=$4, password=$5, access_level=$6, updated_at=$7 where id=$8`, UserTable)
+	_, err := m.DB.ExecContext(ctx, query, u.Email, u.Phone, u.FirstName, u.LastName, u.Password, u.AccessLevel, time.Now(), u.ID)
+
+	if err != nil {
+		log.Println("UpdateUser", err)
+		return err
+	}
+
+	return nil
 }
 
 func (m *pgRepository) InsertReservation(res *models.Reservation) (int, error) {
@@ -52,6 +85,7 @@ func (m *pgRepository) InsertReservation(res *models.Reservation) (int, error) {
 	var newId int
 	err := m.DB.QueryRowContext(ctx, sql, res.UserId, res.RoomId, res.Email, res.FirstName, res.LastName, res.Phone, res.StartDate, res.EndDate).Scan(&newId)
 	if err != nil {
+		log.Println("InsertReservation", err)
 		log.Println(err)
 		return 0, err
 	}
@@ -69,7 +103,7 @@ func (m *pgRepository) InsertRoomRestriction(res *models.RoomRestriction) error 
 		values ($1, $2, $3, $4, $5)`, RoomRestrictionTable)
 	_, err := m.DB.ExecContext(ctx, sql, res.RoomId, res.RestrictionId, res.ReservationId, res.StartDate, res.EndDate)
 	if err != nil {
-		log.Println(err)
+		log.Println("InsertRoomRestriction", err)
 		return err
 	}
 	return nil
@@ -82,13 +116,14 @@ func (m *pgRepository) CheckIfRoomAvailableByDate(roomId int, start, end time.Ti
 	query := fmt.Sprintf(`
 		select count(id) 
 		from %s
-			where room_id = $1 and $2 <= end_date and $3 >= start_date
+			where room_id = $1 and $2 < end_date and $3 > start_date
 	`, RoomRestrictionTable)
 	var numRows int
 
 	err := m.DB.QueryRowContext(ctx, query, roomId, start, end).Scan(&numRows)
 	log.Println("numRows: ", numRows)
 	if err != nil {
+		log.Println("CheckIfRoomAvailableByDate", err)
 		log.Println(err)
 		return false, err
 	}
@@ -112,6 +147,7 @@ func (m *pgRepository) SearchAvailabilityInRange(start, end time.Time) ([]models
 	rows, err := m.DB.QueryContext(ctx, query, start, end)
 
 	if err != nil {
+		log.Println("SearchAvailabilityInRange", err)
 		log.Println(err)
 		return nil, err
 	}
@@ -122,6 +158,7 @@ func (m *pgRepository) SearchAvailabilityInRange(start, end time.Time) ([]models
 		var room models.Room
 		err := rows.Scan(&room.ID, &room.Name)
 		if err != nil {
+			log.Println("SearchAvailabilityInRange", err)
 			log.Println(err)
 			return nil, err
 		}
@@ -140,6 +177,7 @@ func (m *pgRepository) GetRoomById(id int) (models.Room, error) {
 	err := m.DB.QueryRowContext(ctx, query, id).Scan(&room.ID, &room.Name, &room.Description, &room.Slug, &room.Price, &room.CreatedAt, &room.UpdatedAt)
 
 	if err != nil {
+		log.Println("GetRoomById", err)
 		return room, err
 	}
 
@@ -154,6 +192,7 @@ func (m *pgRepository) GetRoomBySlug(slug string) (models.Room, error) {
 	err := m.DB.QueryRowContext(ctx, query, slug).Scan(&room.ID, &room.Name, &room.Description, &room.Slug, &room.Price, &room.CreatedAt, &room.UpdatedAt)
 
 	if err != nil {
+		log.Println("GetRoomBySlug", err)
 		log.Println(err)
 		return room, err
 	}
@@ -165,13 +204,13 @@ func (m *pgRepository) GetRooms() ([]models.Room, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := fmt.Sprintf(`select * from %s`, RoomTable)
+	query := fmt.Sprintf(`select id, name, description, slug, price, created_at, updated_at from %s`, RoomTable)
 
 	rooms := []models.Room{}
 	rows, err := m.DB.QueryContext(ctx, query)
 
 	if err != nil {
-		log.Println(err)
+		log.Println("GetRooms", err)
 		return []models.Room{}, err
 	}
 	for rows.Next() {
@@ -184,4 +223,28 @@ func (m *pgRepository) GetRooms() ([]models.Room, error) {
 	}
 
 	return rooms, nil
+}
+
+func (m *pgRepository) Authenticate(email, testPassword string) (int, string, error) {
+	var id int
+	var hashedPassword string
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf("select id, password from %s where email=$1", UserTable)
+	err := m.DB.QueryRowContext(ctx, query, email).Scan(&id, &hashedPassword)
+
+	if err != nil {
+		log.Println("Authenticate", err)
+		return 0, "", err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(testPassword))
+
+	if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+		return 0, "", errors.New("password does not match")
+	} else if err != nil {
+		return 0, "", err
+	}
+	return id, hashedPassword, nil
 }

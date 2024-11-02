@@ -33,6 +33,11 @@ func ApplyDefaultData(td *models.TemplateData, r *http.Request) *models.Template
 	td.Flash = app.Session.PopString(r.Context(), "flash")
 	td.Warning = app.Session.PopString(r.Context(), "warning")
 	td.Error = app.Session.PopString(r.Context(), "error")
+	if app.Session.Exists(r.Context(), "user_id") {
+		td.IsAuthenticated = 1
+	} else {
+		td.IsAuthenticated = 0
+	}
 	return td
 }
 
