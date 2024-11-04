@@ -32,6 +32,7 @@ func (m *pgRepository) AllUsers() ([]models.User, error) {
 	}
 
 	users := []models.User{}
+	defer rows.Close()
 
 	for rows.Next() {
 		var user models.User
@@ -123,6 +124,8 @@ func (m *pgRepository) AllReservations() ([]models.Reservation, error) {
 
 	var reservations []models.Reservation
 
+	defer rows.Close()
+
 	for rows.Next() {
 		var res models.Reservation
 		err := rows.Scan(&res.ID, &res.UserId, &res.RoomId, &res.Email, &res.FirstName, &res.LastName, &res.Phone, &res.StartDate, &res.EndDate, &res.Processed, &res.CreatedAt, &res.UpdatedAt, &res.Room.ID, &res.Room.Name, &res.Room.Price)
@@ -158,6 +161,7 @@ func (m *pgRepository) AllNewReservations() ([]models.Reservation, error) {
 	}
 
 	var reservations []models.Reservation
+	defer rows.Close()
 
 	for rows.Next() {
 		var res models.Reservation
@@ -319,6 +323,7 @@ func (m *pgRepository) SearchAvailabilityInRange(start, end time.Time) ([]models
 	}
 
 	var rooms []models.Room
+	defer rows.Close()
 
 	for rows.Next() {
 		var room models.Room
@@ -379,6 +384,8 @@ func (m *pgRepository) GetRooms() ([]models.Room, error) {
 		log.Println("GetRooms", err)
 		return []models.Room{}, err
 	}
+
+	defer rows.Close()
 	for rows.Next() {
 		var room models.Room
 		err := rows.Scan(&room.ID, &room.Name, &room.Description, &room.Slug, &room.Price, &room.CreatedAt, &room.UpdatedAt)
@@ -389,4 +396,72 @@ func (m *pgRepository) GetRooms() ([]models.Room, error) {
 	}
 
 	return rooms, nil
+}
+
+func (m *pgRepository) GetRoomRestrictionsForRoomByDate(roomId int, start, end time.Time) ([]models.RoomRestriction, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf(`
+		select id, coalesce(reservation_id, 0), restriction_id, room_id, start_date, end_date
+		from %s
+		where $1 < end_date and $2 >= start_date and room_id = $3
+	`, RoomRestrictionTable)
+
+	rows, err := m.DB.QueryContext(ctx, query, start, end, roomId)
+
+	if err != nil {
+		log.Println("GetRoomRestrictionsForRoomByDate", err)
+		return nil, err
+	}
+
+	var restrictions []models.RoomRestriction
+	defer rows.Close()
+	for rows.Next() {
+		var r models.RoomRestriction
+		err := rows.Scan(&r.ID, &r.ReservationId, &r.RestrictionId, &r.RoomId, &r.StartDate, &r.EndDate)
+
+		if err != nil {
+			log.Println("GetRoomRestrictionsForRoomByDate", err)
+			return nil, err
+		}
+
+		restrictions = append(restrictions, r)
+	}
+
+	return restrictions, nil
+}
+
+func (m *pgRepository) InsertBlockForRoom(id int, startDate time.Time) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	query := fmt.Sprintf(`
+		insert into %s (room_id, restriction_id, start_date, end_date) values ($1, $2, $3, $4)
+	`, RoomRestrictionTable)
+
+	_, err := m.DB.ExecContext(ctx, query, id, 2, startDate, startDate.AddDate(0, 0, 1))
+
+	if err != nil {
+		log.Println("InsertBlockForRoom", err)
+		return err
+	}
+
+	return nil
+}
+
+func (m *pgRepository) RemoveBlockById(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	query := fmt.Sprintf(`
+		delete from %s where id = $1
+	`, RoomRestrictionTable)
+
+	_, err := m.DB.ExecContext(ctx, query, id)
+
+	if err != nil {
+		log.Println("RemoveBlockForRoom", err)
+		return err
+	}
+
+	return nil
 }

@@ -7,21 +7,11 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
-	"time"
 
 	"github.com/justinas/nosurf"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/config"
 	"github.com/thanhphuocnguyen/go-bookings-app/internal/models"
 )
-
-// Function is a map of functions that can be used in the template
-var function = template.FuncMap{
-	"humanDate": humanDate,
-}
-
-func humanDate(t time.Time) string {
-	return t.Format("2006-01-02")
-}
 
 var app *config.AppConfig
 

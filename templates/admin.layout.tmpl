@@ -22,7 +22,11 @@
     <link rel="shortcut icon" href="/static/admin/images/favicon.png" />
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/notie/dist/notie.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10.15.5/dist/sweetalert2.min.css">
-
+    <style>
+        .notie-container {
+            z-index: 10000 !important;
+        }
+    </style>
     {{block "styles" . }}
 
     {{end}}

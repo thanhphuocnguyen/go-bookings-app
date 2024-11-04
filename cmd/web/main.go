@@ -50,6 +50,7 @@ func run() (*driver.DB, error) {
 	gob.Register(models.RoomRestriction{})
 	gob.Register(models.User{})
 	gob.Register(models.Room{})
+	gob.Register(map[string]int{})
 	// Initialize the template cache
 	templateCache, err := render.InitializeTmplCache()
 	if err != nil {

@@ -29,8 +29,8 @@ var testCases = []struct {
 	{"about", "/about", "GET", []postData{}, 200},
 	{"contact", "/contact", "GET", []postData{}, 200},
 	{"search-availability", "/search-availability", "GET", []postData{}, 200},
-	// {"generals-quarters", "/generals-quarters", "GET", []postData{}, 200},
-	// {"majors-suite", "/majors-suite", "GET", []postData{}, 200},
+	{"show-login", "/login", "GET", []postData{}, 200},
+	{"show-registration", "/register", "GET", []postData{}, 200},
 }
 
 func TestHandlers(t *testing.T) {

@@ -23,8 +23,8 @@ func New(data url.Values) *Form {
 	}
 }
 
-func (f *Form) Has(field string, r *http.Request) bool {
-	x := r.Form.Get(field)
+func (f *Form) Has(field string) bool {
+	x := f.Get(field)
 	return x != ""
 }
 

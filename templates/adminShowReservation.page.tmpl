@@ -15,7 +15,7 @@ Reservation Detail
     <strong>Price:</strong> ${{$res.Room.Price}}<br>
     <strong>Arrival: </strong> {{humanDate $res.StartDate}}<br>
     <strong>Departure: </strong> {{humanDate $res.EndDate}}<br>
-    <form method="post" action="/admin/reservation/{{$res.ID}}" class="" novalidate>
+    <form method="post" action="/admin/reservations/{{$res.ID}}?from={{index .StringMap "from"}}" class="" novalidate>
         <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
         <div class="form-group mt-3">
             <label for="first_name">First Name:</label>
@@ -50,14 +50,18 @@ Reservation Detail
                 name='phone' value="{{$res.Phone}}" required>
         </div>
         <hr>
-        <input type="submit" class="btn btn-success" value="Save">
-        <button type="button" class="btn btn-warning" onclick="window.history.back();">Cancel</button>
-        {{ if eq $res.Processed true}}
-        <button type="button" class="btn btn-info" onclick="unprocessed({{$res.ID}})">Mark as unprocessed</button>
-        {{else}}
-        <button type="button" class="btn btn-info" onclick="processed({{$res.ID}})">Mark as processed</button>
-        {{end}}
-        <button type="button" class="btn btn-danger" onclick="deleteReservation({{$res.ID}})">Delete</button>
+        <div class="float-start">
+            <input type="submit" class="btn btn-success" value="Save">
+            <button type="button" class="btn btn-warning" onclick="window.history.back();">Cancel</button>
+        </div>
+        <div class="float-end">
+            {{ if eq $res.Processed true}}
+            <button type="button" class="btn btn-info" onclick="unprocessed({{$res.ID}})">Mark as unprocessed</button>
+            {{else}}
+            <button type="button" class="btn btn-info" onclick="processed({{$res.ID}})">Mark as processed</button>
+            {{end}}
+            <button type="button" class="btn btn-danger" onclick="deleteReservation({{$res.ID}})">Delete</button>
+        </div>
     </form>
 </div>
 {{end}}
@@ -69,7 +73,7 @@ Reservation Detail
             icon: undefined,
             msg: 'Are you sure you want to mark this reservation as processed?',
             callback: (result) => {
-                window.location.href = `/admin/reservations/${id}/processed?processed=true`
+                window.location.href = `/admin/reservations/${id}/processed?processed=true&from={{index .StringMap "from"}}`
             }
         })
     }
@@ -79,13 +83,14 @@ Reservation Detail
             icon: 'waring',
             msg: 'Are you sure you want to mark this reservation as unprocessed?',
             callback: (result) => {
-                window.location.href = `/admin/reservations/${id}/processed?processed=false`;
+                window.location.href = `/admin/reservations/${id}/processed?processed=false&from={{index .StringMap "from"}}`;
             }
         })
     }
 
     function deleteReservation(id) {
         attention.custom({
+            icon: undefined,
             msg: 'Are you sure you want to delete this reservation?',
             callback: (result) => {
                 window.location.href = `/admin/reservations/${id}/delete`;

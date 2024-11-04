@@ -87,3 +87,15 @@ func (m *testDbRepo) DeleteReservation(id int) error {
 func (m *testDbRepo) ProcessReservation(id int, processed bool) error {
 	return nil
 }
+
+func (m *testDbRepo) GetRoomRestrictionsForRoomByDate(roomId int, start, end time.Time) ([]models.RoomRestriction, error) {
+	return []models.RoomRestriction{}, nil
+}
+
+func (m *testDbRepo) InsertBlockForRoom(id int, startDate time.Time) error {
+	return nil
+}
+
+func (m *testDbRepo) RemoveBlockById(id int) error {
+	return nil
+}

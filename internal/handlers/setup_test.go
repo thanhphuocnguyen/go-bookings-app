@@ -120,11 +120,31 @@ func getRoutes() http.Handler {
 	mux.Post("/search-availability", Repo.SearchAvailability)
 	mux.Post("/search-availability-json", Repo.AvailabilityJSON)
 
+	mux.Get("/user/login", Repo.ShowLogin)
+	mux.Post("/user/login", Repo.PostLogin)
+	mux.Get("/user/logout", Repo.Logout)
+	mux.Get("/user/register", Repo.ShowRegistration)
+	mux.Post("/user/register", Repo.PostRegistration)
+
+	mux.Get("/admin/dashboard", Repo.AdminDashboard)
+	mux.Get("/admin/reservations/{id}", Repo.AdminShowReservation)
+	mux.Post("/admin/reservations/{id}", Repo.AdminEditReservation)
+	mux.Get("/admin/reservations/{id}/delete", Repo.AdminDeleteReservation)
+	mux.Get("/admin/reservations/{id}/processed", Repo.AdminProcessedReservation)
+	mux.Get("/admin/reservations-new", Repo.AdminNewReservations)
+	mux.Get("/admin/reservations-all", Repo.AdminAllReservations)
+	mux.Get("/admin/reservations-calendar", Repo.AdminReservationsCalendar)
+	mux.Post("/admin/reservations-calendar", Repo.AdminPostReservationsCalendar)
 	return mux
 }
 
 // Function is a map of functions that can be used in the template
-var function = template.FuncMap{}
+var function = template.FuncMap{
+	"humanDate":  render.HumanDate,
+	"formatDate": render.FormatDate,
+	"iterate":    render.Iterate,
+	"add":        render.Add,
+}
 
 func InitTemplateCache() (map[string]*template.Template, error) {
 	cache := make(map[string]*template.Template)
